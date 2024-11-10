@@ -16,6 +16,8 @@ model Post {
     views Int @default(0)
     tags String[]
     comments Comment[]
+
+    @@map("posts")
 }
 
 model Comment {

@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma'
+import { prisma } from '@/lib/prisma'
 
 beforeAll(async () => {
     await prisma.$connect()
