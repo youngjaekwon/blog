@@ -1,8 +1,8 @@
-import { PostController } from "@/controllers/post/post.controller"
-import { CreatePostDTO } from "@/dtos/post/post.create.dto"
-import { PostService } from "@/services/post/post.service"
+import { PostController } from '@/controllers/post/post.controller'
+import { CreatePostDTO } from '@/dtos/post/post.create.dto'
+import { PostService } from '@/services/post/post.service'
 import { Request, Response } from 'express'
-import { StatusCodes } from "http-status-codes"
+import { StatusCodes } from 'http-status-codes'
 
 jest.mock('@/services/post/post.service')
 
@@ -15,37 +15,42 @@ describe('PostController', () => {
     beforeEach(() => {
         mockResponse = {
             status: jest.fn().mockReturnThis(),
-            json: jest.fn().mockReturnThis()
+            json: jest.fn().mockReturnThis(),
         }
 
         mockRequest = {}
 
-        mockPostService = new PostService() as jest.Mocked<PostService>
-        PostService.prototype.create = jest.fn()
+        mockPostService = {
+            create: jest.fn(),
+        } as unknown as jest.Mocked<PostService>
 
-        postController = new PostController()
+        postController = new PostController(mockPostService)
     })
 
     describe('createPost', () => {
         const mockPostData: CreatePostDTO = {
             title: 'Test Post',
-            content: 'Test Content'
+            content: 'Test Content',
         }
 
         it('should create a post successfully', async () => {
             // Given
-            const mockCreatedPost = { id: 1, ...mockPostData }
+            const mockCreatedPost = {
+                id: '1',
+                ...mockPostData,
+                tags: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                views: 0,
+            }
             mockRequest.body = mockPostData
-                ; (PostService.prototype.create as jest.Mock).mockResolvedValue(mockCreatedPost)
+            ;(mockPostService.create as jest.Mock).mockResolvedValue(mockCreatedPost)
 
             // When
-            await postController.createPost(
-                mockRequest as Request,
-                mockResponse as Response
-            )
+            await postController.createPost(mockRequest as Request, mockResponse as Response)
 
             // Then
-            expect(PostService.prototype.create).toHaveBeenCalledWith(mockPostData)
+            expect(mockPostService.create).toHaveBeenCalledWith(mockPostData)
             expect(mockResponse.status).toHaveBeenCalledWith(StatusCodes.CREATED)
             expect(mockResponse.json).toHaveBeenCalledWith(mockCreatedPost)
         })
@@ -53,27 +58,17 @@ describe('PostController', () => {
         it('should handle errors when creating a post fails', async () => {
             // Given
             mockRequest.body = mockPostData
-                ; (PostService.prototype.create as jest.Mock).mockResolvedValue(
-                    new Error('Databse error')
-                )
+            ;(mockPostService.create as jest.Mock).mockRejectedValue(new Error('Database error'))
 
             // When
-            await postController.createPost(
-                mockRequest as Request,
-                mockResponse as Response
-            )
+            await postController.createPost(mockRequest as Request, mockResponse as Response)
 
             // Then
-            expect(PostService.prototype.create).toHaveBeenCalledWith(mockPostData)
-            expect(mockResponse.status).toHaveBeenCalledWith(
-                StatusCodes.INTERNAL_SERVER_ERROR
-            )
+            expect(mockPostService.create).toHaveBeenCalledWith(mockPostData)
+            expect(mockResponse.status).toHaveBeenCalledWith(StatusCodes.INTERNAL_SERVER_ERROR)
             expect(mockResponse.json).toHaveBeenCalledWith({
-                message: 'Error creating post'
+                message: 'Error creating post',
             })
         })
     })
-
-
-
 })
