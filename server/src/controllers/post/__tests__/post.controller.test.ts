@@ -45,8 +45,8 @@ describe('PostController', () => {
                 updatedAt: new Date(),
                 views: 0,
             }
-            mockRequest.body = mockPostData
-            ;(mockPostService.create as jest.Mock).mockResolvedValue(mockCreatedPost)
+            mockRequest.body = mockPostData;
+            (mockPostService.create as jest.Mock).mockResolvedValue(mockCreatedPost)
 
             // When
             await postController.createPost(mockRequest as Request, mockResponse as Response)
@@ -54,14 +54,17 @@ describe('PostController', () => {
             // Then
             expect(mockPostService.create).toHaveBeenCalledWith(mockPostData)
             expect(mockResponse.status).toHaveBeenCalledWith(StatusCodes.CREATED)
-            expect(mockResponse.json).toHaveBeenCalledWith(mockCreatedPost)
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: true,
+                data: mockCreatedPost
+            })
         })
 
         it('should handle database connection errors', async () => {
             // Given
             mockRequest.body = mockPostData
-            const dbError = new PostDatabaseError()
-            ;(mockPostService.create as jest.Mock).mockRejectedValue(dbError)
+            const dbError = new PostDatabaseError();
+            (mockPostService.create as jest.Mock).mockRejectedValue(dbError)
 
             // When
             await postController.createPost(mockRequest as Request, mockResponse as Response)
@@ -70,16 +73,19 @@ describe('PostController', () => {
             expect(mockPostService.create).toHaveBeenCalledWith(mockPostData)
             expect(mockResponse.status).toHaveBeenCalledWith(dbError.statusCode)
             expect(mockResponse.json).toHaveBeenCalledWith({
-                message: dbError.message,
-                errorCode: dbError.errorCode,
+                success: false,
+                error: {
+                    message: dbError.message,
+                    errorCode: dbError.errorCode
+                }
             })
         })
 
         it('should handle duplicate post errors', async () => {
             // Given
             mockRequest.body = mockPostData
-            const duplicateError = new PostDuplicateError()
-            ;(mockPostService.create as jest.Mock).mockRejectedValue(duplicateError)
+            const duplicateError = new PostDuplicateError();
+            (mockPostService.create as jest.Mock).mockRejectedValue(duplicateError)
 
             // When
             await postController.createPost(mockRequest as Request, mockResponse as Response)
@@ -88,8 +94,11 @@ describe('PostController', () => {
             expect(mockPostService.create).toHaveBeenCalledWith(mockPostData)
             expect(mockResponse.status).toHaveBeenCalledWith(duplicateError.statusCode)
             expect(mockResponse.json).toHaveBeenCalledWith({
-                message: duplicateError.message,
-                errorCode: duplicateError.errorCode,
+                success: false,
+                error: {
+                    message: duplicateError.message,
+                    errorCode: duplicateError.errorCode
+                }
             })
         })
 
@@ -121,8 +130,8 @@ describe('PostController', () => {
                     path: ['content'],
                 },
             ])
-            const validationError = new PostValidationError(zodError)
-            ;(mockPostService.create as jest.Mock).mockRejectedValue(zodError)
+            const validationError = new PostValidationError(zodError);
+            (mockPostService.create as jest.Mock).mockRejectedValue(zodError)
 
             // When
             await postController.createPost(mockRequest as Request, mockResponse as Response)
@@ -131,9 +140,12 @@ describe('PostController', () => {
             expect(mockPostService.create).toHaveBeenCalledWith(invalidPostData)
             expect(mockResponse.status).toHaveBeenCalledWith(StatusCodes.UNPROCESSABLE_ENTITY)
             expect(mockResponse.json).toHaveBeenCalledWith({
-                message: validationError.message,
-                errorCode: validationError.errorCode,
-                errors: validationError.errors,
+                success: false,
+                error: {
+                    message: validationError.message,
+                    errorCode: validationError.errorCode,
+                    errors: validationError.errors
+                }
             })
         })
     })

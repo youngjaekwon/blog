@@ -18,6 +18,7 @@ model Post {
     comments Comment[]
 
     @@map("posts")
+    @@index([title])
 }
 
 model Comment {

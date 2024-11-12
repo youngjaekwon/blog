@@ -1,16 +1,22 @@
 import { PostService } from '@/services/post/post.service'
 import { prisma } from '@/lib/prisma'
 import { CreatePostDTO } from '@/dtos/post/post.create.dto'
+import { IPostRepository } from '@/repositories/post/post.interface'
+import { Post } from '@/models/post/post.model'
 
 describe('PostService', () => {
     let postService: PostService
+    let mockPostRepository: jest.Mocked<IPostRepository>
 
     beforeEach(() => {
-        postService = new PostService()
-    })
-
-    afterEach(async () => {
-        await prisma.post.deleteMany()
+        mockPostRepository = {
+            findById: jest.fn(),
+            create: jest.fn(),
+            update: jest.fn(),
+            delete: jest.fn(),
+            findAll: jest.fn()
+        }
+        postService = new PostService(mockPostRepository)
     })
 
     describe('create', () => {
@@ -20,6 +26,16 @@ describe('PostService', () => {
                 content: 'Test Content',
                 tags: ['test'],
             }
+            const expectedPost: Post = {
+                id: '1',
+                ...postData,
+                tags: ['test'],
+                views: 0,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }
+
+            mockPostRepository.create.mockResolvedValue(expectedPost)
 
             const post = await postService.create(postData)
 
@@ -64,6 +80,16 @@ describe('PostService', () => {
                 title: 'Test Post',
                 content: 'Test Content',
             }
+            const expectedPost: Post = {
+                id: '1',
+                ...postData,
+                tags: [],
+                views: 0,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }
+
+            mockPostRepository.create.mockResolvedValue(expectedPost)
 
             const post = await postService.create(postData)
 

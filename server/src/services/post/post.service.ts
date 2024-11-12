@@ -1,17 +1,14 @@
 import { CreatePostDTO } from '@/dtos/post/post.create.dto'
 import { prisma } from '@/lib/prisma'
+import { IPostRepository } from '@/repositories/post/post.interface'
 import { createPostSchema } from '@/validators/post/post.schemas'
 
 export class PostService {
+    constructor(
+        private readonly postRepository: IPostRepository
+    ) {}
     create = async (data: CreatePostDTO) => {
-        const validatedData = createPostSchema.parse(data)
-
-        return prisma.post.create({
-            data: {
-                title: validatedData.title,
-                content: validatedData.content,
-                tags: validatedData.tags,
-            },
-        })
+        const validatedData: CreatePostDTO = createPostSchema.parse(data) as CreatePostDTO
+        return this.postRepository.create(validatedData)
     }
 }
