@@ -15,38 +15,32 @@ import { ApiResponse } from '@/types/common/response.types'
 import { Post } from '@/models/post/post.model'
 
 export class PostController {
-    constructor(private readonly postService: PostService) { }
+    constructor(private readonly postService: PostService) {}
 
     createPost = async (req: Request, res: Response<ApiResponse<Post>>) => {
         try {
             const postData: CreatePostDTO = req.body
             const post = await this.postService.create(postData)
-            res.status(StatusCodes.CREATED).json(
-                {
-                    success: true,
-                    data: post
-                }
-            )
+            res.status(StatusCodes.CREATED).json({
+                success: true,
+                data: post,
+            })
         } catch (error) {
             // Zod Validation Error
             if (error instanceof ZodError) {
                 const validationError = new PostValidationError(error)
-                return res.status(validationError.statusCode).json(
-                    {
-                        success: false,
-                        error: validationError.toJSON()
-                    }
-                )
+                return res.status(validationError.statusCode).json({
+                    success: false,
+                    error: validationError.toJSON(),
+                })
             }
 
             // PostError
             if (error instanceof PostError) {
-                return res.status(error.statusCode).json(
-                    {
-                        success: false,
-                        error: error.toJSON()
-                    }
-                )
+                return res.status(error.statusCode).json({
+                    success: false,
+                    error: error.toJSON(),
+                })
             }
 
             // Prisma Errors
@@ -56,32 +50,26 @@ export class PostController {
                     const duplicateError = new PostDuplicateError(
                         `Post with this ${(error.meta?.target as string[])?.join(', ')} already exists`
                     )
-                    return res.status(duplicateError.statusCode).json(
-                        {
-                            success: false,
-                            error: duplicateError.toJSON()
-                        }
-                    )
+                    return res.status(duplicateError.statusCode).json({
+                        success: false,
+                        error: duplicateError.toJSON(),
+                    })
                 }
             }
 
             if (error instanceof PrismaClientInitializationError) {
                 const dbError = new PostDatabaseError('Database connection failed')
-                return res.status(dbError.statusCode).json(
-                    {
-                        success: false,
-                        error: dbError.toJSON()
-                    }
-                )
+                return res.status(dbError.statusCode).json({
+                    success: false,
+                    error: dbError.toJSON(),
+                })
             }
 
             const unknownError = new PostCreateError('An unexpected error occurred')
-            return res.status(unknownError.statusCode).json(
-                {
-                    success: false,
-                    error: unknownError.toJSON()
-                }
-            )
+            return res.status(unknownError.statusCode).json({
+                success: false,
+                error: unknownError.toJSON(),
+            })
         }
     }
 }
