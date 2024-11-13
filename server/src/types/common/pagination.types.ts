@@ -1,11 +1,5 @@
-import { Prisma } from "@prisma/client"
-
+// src/types/common/repository.types.ts
 export type SortOrder = 'asc' | 'desc'
-
-type SortKeys = keyof Pick<
-    Prisma.PostOrderByWithRelationInput,
-    'id' | 'title' | 'content' | 'createdAt' | 'updatedAt' | 'views' | 'tags'
->
 
 export interface PaginationOptions {
     page?: number
@@ -16,36 +10,76 @@ export interface PaginationOptions {
 export const DEFAULT_PAGINATION: Required<PaginationOptions> = {
     page: 1,
     limit: 10,
-    skip: 0
+    skip: 0,
 }
 
-export interface FilterOperator {
-    eq?: any
-    ne?: any
+/**
+ * Prisma style where clause operators
+ */
+export interface WhereOperators {
+    equals?: any
+    not?: any
     gt?: any
     gte?: any
     lt?: any
     lte?: any
     in?: any[]
-    nin?: any[]
-    regex?: string
-    exists?: boolean
+    notIn?: any[]
+    contains?: string
+    startsWith?: string
+    endsWith?: string
+    // MongoDB style operators도 지원
+    $eq?: any
+    $ne?: any
+    $gt?: any
+    $gte?: any
+    $lt?: any
+    $lte?: any
+    $in?: any[]
+    $nin?: any[]
+    $regex?: string
+    $exists?: boolean
 }
 
-export interface FilterOptions {
-    [key: string]: FilterOperator | any
+export interface WhereOptions {
+    [key: string]: WhereOperators | any
 }
 
-export interface FindOptions {
-    pagination?: PaginationOptions
-    sort?: Partial<Record<SortKeys, SortOrder>>
-    filter?: FilterOptions
-    include?: string[]
+export interface FindManyArgs {
+    where?: WhereOptions
+    orderBy?: Record<string, SortOrder>
+    include?: Record<string, boolean>
+    skip?: number
+    take?: number
+}
+
+export interface FindOneArgs {
+    where: WhereOptions
+    include?: Record<string, boolean>
+}
+
+export interface CreateArgs<TCreateDTO> {
+    data: TCreateDTO
+    include?: Record<string, boolean>
+}
+
+export interface UpdateArgs<TUpdateDTO> {
+    where: WhereOptions
+    data: TUpdateDTO
+    include?: Record<string, boolean>
+}
+
+export interface DeleteArgs {
+    where: WhereOptions
+}
+
+export interface CountArgs {
+    where?: WhereOptions
 }
 
 export interface PaginatedResponse<T> {
     items: T[]
-    meat: {
+    meta: {
         total: number
         page: number
         limit: number
@@ -53,4 +87,13 @@ export interface PaginatedResponse<T> {
         hasNext: boolean
         hasPrev: boolean
     }
+}
+
+export interface RepositoryDelegate<TModel, TCreateDTO, TUpdateDTO> {
+    findUnique: (args: FindOneArgs) => Promise<TModel | null>
+    findMany: (args: FindManyArgs) => Promise<TModel[]>
+    create: (args: CreateArgs<TCreateDTO>) => Promise<TModel>
+    update: (args: UpdateArgs<TUpdateDTO>) => Promise<TModel>
+    delete: (args: DeleteArgs) => Promise<TModel>
+    count: (args: CountArgs) => Promise<number>
 }

@@ -1,106 +1,64 @@
-import { PrismaClient } from "@prisma/client"
-import { DEFAULT_PAGINATION, FindOptions } from "@/types/common/pagination.types"
+import {
+    DEFAULT_PAGINATION,
+    FindManyArgs,
+    PaginatedResponse,
+    RepositoryDelegate,
+} from '@/types/common/pagination.types'
 
-export abstract class BaseRepository<
-    T extends { id: string },
-    TCreateDTO,
-    TUpdateDTO,
-    TWhereInput,
-    TOrderByInput,
-    TPrismaModel
-> {
-    constructor(
-        protected readonly prisma: PrismaClient,
-        protected readonly model: any
-    ) {}
+export class BaseRepository<TModel, TCreateDTO, TUpdateDTO> {
+    constructor(protected delegate: RepositoryDelegate<TModel, TCreateDTO, TUpdateDTO>) {}
 
-    protected abstract mapToDomain(prismaModel: TPrismaModel): T
-
-    protected abstract getIncludeRelations(): object
-
-    async findById(id: string): Promise<T | null> {
-        if (!this.isValidObjectId(id)) return null
-
-        const result = await this.model.findUnique({
+    async findById(id: string, include?: Record<string, boolean>): Promise<TModel | null> {
+        return this.delegate.findUnique({
             where: { id },
-            include: this.getIncludeRelations()
-        }) as TPrismaModel | null
-
-        return result ? this.mapToDomain(result) : null
-    }
-
-    async create(data: TCreateDTO): Promise<T> {
-        const result = await this.model.create({
-            data,
-            include: this.getIncludeRelations()
-        }) as TPrismaModel
-
-        return this.mapToDomain(result)
-    }
-
-    async update(id: string, data: TUpdateDTO): Promise<T> {
-        if (!this.isValidObjectId(id)) {
-            throw new Error('Invalid Id format')
-        }
-
-        const result = await this.model.update({
-            where: { id },
-            data,
-            include: this.getIncludeRelations()
-        }) as TPrismaModel
-
-        return this.mapToDomain(result)
-    }
-
-    async delete(id: string): Promise<void> {
-        if (!this.isValidObjectId(id)) {
-            throw new Error('Invalid Id format')
-        }
-
-        await this.model.delete({
-            where: { id }
+            include,
         })
     }
 
-    async findAll(options: FindOptions): Promise<{ items: T[]; total: number }> {
-        const {
-            pagination = DEFAULT_PAGINATION,
-            sort = { createdAt: 'desc' },
-            filter = {}
-        } = options
-
-        const validatedPagination = {
-            page: Math.max(1, pagination.page ?? DEFAULT_PAGINATION.page),
-            limit: Math.min(100, Math.max(1, pagination.limit ?? DEFAULT_PAGINATION.limit)),
-            skip: pagination.skip ?? DEFAULT_PAGINATION.skip
+    async findAll(params?: FindManyArgs): Promise<PaginatedResponse<TModel>> {
+        const args = params ?? {}
+        const pagination = {
+            page: args?.skip
+                ? Math.floor(args.skip / (args.take || DEFAULT_PAGINATION.limit)) + 1
+                : DEFAULT_PAGINATION.page,
+            limit: args?.take || DEFAULT_PAGINATION.limit,
         }
 
-        const where = this.buildWhereClause(filter)
-        const skip = (validatedPagination.page - 1) * validatedPagination.limit
-        const take = validatedPagination.limit
-
         const [items, total] = await Promise.all([
-            this.model.findMany({
-                where,
-                skip,
-                take,
-                orderBy: this.buildOrderByClause(sort),
-                include: this.getIncludeRelations()
-            }),
-            this.model.count({ where })
+            this.delegate.findMany(args),
+            this.delegate.count({ where: args?.where }),
         ])
 
+        const totalPages = Math.ceil(total / pagination.limit)
+
         return {
-            items: items.map((item: TPrismaModel) => this.mapToDomain(item)),
-            total
+            items,
+            meta: {
+                total,
+                page: pagination.page,
+                limit: pagination.limit,
+                totalPages,
+                hasNext: pagination.page < totalPages,
+                hasPrev: pagination.page > 1,
+            },
         }
     }
 
-    protected abstract buildWhereClause(filter: Record<string, any>): TWhereInput
+    async create(data: TCreateDTO, include?: Record<string, boolean>): Promise<TModel> {
+        return this.delegate.create({ data, include })
+    }
 
-    protected abstract buildOrderByClause(sort: Record<string, string>): TOrderByInput
+    async update(id: string, data: TUpdateDTO, include?: Record<string, boolean>): Promise<TModel> {
+        return this.delegate.update({
+            where: { id },
+            data,
+            include,
+        })
+    }
 
-    protected isValidObjectId(id: string): boolean {
-        return /^[0-9a-fA-F]{24}$/.test(id)
+    async delete(id: string): Promise<void> {
+        await this.delegate.delete({
+            where: { id },
+        })
     }
 }
