@@ -1,10 +1,11 @@
 import { CreatePostDTO } from '@/dtos/post/post.create.dto'
 import { Post } from '@/models/post/post.model'
 import { IPostRepository } from '@/repositories/post/post.interface'
+import { IPostService } from '@/services/post/post.interface'
 import { PostService } from '@/services/post/post.service'
 
 describe('PostService', () => {
-    let postService: PostService
+    let postService: IPostService
     let mockPostRepository: jest.Mocked<IPostRepository>
 
     beforeEach(() => {

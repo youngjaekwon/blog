@@ -1,7 +1,8 @@
 import { CreatePostDTO } from '@/dtos/post/post.create.dto'
 import { UpdatePostDTO } from '@/dtos/post/post.update.dto'
 import { Post } from '@/models/post/post.model'
-import { FindManyArgs, PaginatedResponse } from '@/types/common/pagination.types'
+import { PaginatedResponse } from '@/types/common/pagination.types'
+import { FindManyArgs } from '@/types/common/repository.types'
 
 export interface IPostRepository {
     findById(id: string, include?: Record<string, boolean>): Promise<Post | null>

@@ -1,9 +1,26 @@
-import {
-    DEFAULT_PAGINATION,
-    FindManyArgs,
-    PaginatedResponse,
-    RepositoryDelegate,
-} from '@/types/common/pagination.types'
+import { DatabaseError, DuplicateError } from '@/errors/common/database.error'
+import { DEFAULT_PAGINATION, PaginatedResponse } from '@/types/common/pagination.types'
+import { FindManyArgs, RepositoryDelegate } from '@/types/common/repository.types'
+import { PrismaClientInitializationError, PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
+
+export abstract class BaseDelegate {
+    protected async executeQuery<T>(query: () => Promise<T>): Promise<T> {
+        try {
+            return await query()
+        } catch (error) {
+            if (error instanceof PrismaClientInitializationError) {
+                throw new DatabaseError('Database connection failed')
+            }
+            if (error instanceof PrismaClientKnownRequestError) {
+                // 유니크 제약조건 위반 (P2002)
+                if (error.code === 'P2002') {
+                    throw new DuplicateError()
+                }
+            }
+            throw error
+        }
+    }
+}
 
 export class BaseRepository<TModel, TCreateDTO, TUpdateDTO> {
     constructor(protected delegate: RepositoryDelegate<TModel, TCreateDTO, TUpdateDTO>) {}

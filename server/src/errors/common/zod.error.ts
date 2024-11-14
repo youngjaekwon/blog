@@ -6,7 +6,7 @@ export class ZodValidationError extends Error {
     public errorCode: string
     public errors?: { field: string; message: string }[]
 
-    constructor(errorCode: string, error: ZodError, message: string = 'Validation failed') {
+    constructor(error: ZodError, message: string = 'Validation failed', errorCode: string = 'VALIDATION_ERROR') {
         super(message)
         this.name = this.constructor.name
         this.statusCode = StatusCodes.UNPROCESSABLE_ENTITY

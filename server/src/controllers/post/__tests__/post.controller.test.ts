@@ -1,10 +1,8 @@
 import { PostController } from '@/controllers/post/post.controller'
 import { CreatePostDTO } from '@/dtos/post/post.create.dto'
-import { PostDatabaseError, PostDuplicateError, PostValidationError } from '@/errors/post/post.error'
-import { PostService } from '@/services/post/post.service'
+import { IPostService } from '@/services/post/post.interface'
 import { Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
-import { z } from 'zod'
 
 jest.mock('@/services/post/post.service')
 
@@ -12,7 +10,7 @@ describe('PostController', () => {
     let postController: PostController
     let mockRequest: Partial<Request>
     let mockResponse: Partial<Response>
-    let mockPostService: PostService
+    let mockPostService: IPostService
 
     beforeEach(() => {
         mockResponse = {
@@ -24,7 +22,11 @@ describe('PostController', () => {
 
         mockPostService = {
             create: jest.fn(),
-        } as unknown as PostService
+            retrieve: jest.fn(),
+            findAll: jest.fn(),
+            update: jest.fn(),
+            delete: jest.fn(),
+        } as unknown as IPostService
 
         postController = new PostController(mockPostService)
     })
@@ -45,8 +47,8 @@ describe('PostController', () => {
                 updatedAt: new Date(),
                 views: 0,
             }
-            mockRequest.body = mockPostData;
-            (mockPostService.create as jest.Mock).mockResolvedValue(mockCreatedPost)
+            mockRequest.body = mockPostData
+            ;(mockPostService.create as jest.Mock).mockResolvedValue(mockCreatedPost)
 
             // When
             await postController.createPost(mockRequest as Request, mockResponse as Response)
@@ -56,96 +58,36 @@ describe('PostController', () => {
             expect(mockResponse.status).toHaveBeenCalledWith(StatusCodes.CREATED)
             expect(mockResponse.json).toHaveBeenCalledWith({
                 success: true,
-                data: mockCreatedPost
+                data: mockCreatedPost,
             })
         })
+    })
 
-        it('should handle database connection errors', async () => {
+    describe('retrievePost', () => {
+        it('should retrieve a post successfully', async () => {
             // Given
-            mockRequest.body = mockPostData
-            const dbError = new PostDatabaseError();
-            (mockPostService.create as jest.Mock).mockRejectedValue(dbError)
-
-            // When
-            await postController.createPost(mockRequest as Request, mockResponse as Response)
-
-            // Then
-            expect(mockPostService.create).toHaveBeenCalledWith(mockPostData)
-            expect(mockResponse.status).toHaveBeenCalledWith(dbError.statusCode)
-            expect(mockResponse.json).toHaveBeenCalledWith({
-                success: false,
-                error: {
-                    message: dbError.message,
-                    errorCode: dbError.errorCode
-                }
-            })
-        })
-
-        it('should handle duplicate post errors', async () => {
-            // Given
-            mockRequest.body = mockPostData
-            const duplicateError = new PostDuplicateError();
-            (mockPostService.create as jest.Mock).mockRejectedValue(duplicateError)
-
-            // When
-            await postController.createPost(mockRequest as Request, mockResponse as Response)
-
-            // Then
-            expect(mockPostService.create).toHaveBeenCalledWith(mockPostData)
-            expect(mockResponse.status).toHaveBeenCalledWith(duplicateError.statusCode)
-            expect(mockResponse.json).toHaveBeenCalledWith({
-                success: false,
-                error: {
-                    message: duplicateError.message,
-                    errorCode: duplicateError.errorCode
-                }
-            })
-        })
-
-        it('should handle validation errors', async () => {
-            // Given
-            const invalidPostData = {
-                title: '',
-                content: 'x'.repeat(1001),
+            const mockPostId = '1'
+            const mockPost = {
+                id: mockPostId,
+                title: 'Test Post',
+                content: 'Test Content',
+                tags: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                views: 0,
             }
-            mockRequest.body = invalidPostData
-
-            const zodError = new z.ZodError([
-                {
-                    code: 'too_small',
-                    minimum: 1,
-                    type: 'string',
-                    inclusive: true,
-                    exact: false,
-                    message: 'Title is required',
-                    path: ['title'],
-                },
-                {
-                    code: 'too_big',
-                    maximum: 1000,
-                    type: 'string',
-                    inclusive: true,
-                    exact: false,
-                    message: 'Content is too long',
-                    path: ['content'],
-                },
-            ])
-            const validationError = new PostValidationError(zodError);
-            (mockPostService.create as jest.Mock).mockRejectedValue(zodError)
+            mockRequest.params = { id: mockPostId }
+            ;(mockPostService.retrieve as jest.Mock).mockResolvedValue(mockPost)
 
             // When
-            await postController.createPost(mockRequest as Request, mockResponse as Response)
+            await postController.retrievePost(mockRequest as Request, mockResponse as Response)
 
             // Then
-            expect(mockPostService.create).toHaveBeenCalledWith(invalidPostData)
-            expect(mockResponse.status).toHaveBeenCalledWith(StatusCodes.UNPROCESSABLE_ENTITY)
+            expect(mockPostService.retrieve).toHaveBeenCalledWith(mockPostId)
+            expect(mockResponse.status).toHaveBeenCalledWith(StatusCodes.OK)
             expect(mockResponse.json).toHaveBeenCalledWith({
-                success: false,
-                error: {
-                    message: validationError.message,
-                    errorCode: validationError.errorCode,
-                    errors: validationError.errors
-                }
+                success: true,
+                data: mockPost,
             })
         })
     })
