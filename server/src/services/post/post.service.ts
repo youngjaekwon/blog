@@ -2,14 +2,14 @@ import { CreatePostDTO } from '@/dtos/post/post.create.dto'
 import { NotFoundError } from '@/errors/common/database.error'
 import { IPostRepository } from '@/repositories/post/post.interface'
 import { IPostService } from '@/services/post/post.interface'
-import { createPostSchema } from '@/validators/post/post.schemas'
+import { responsePostSchema } from '@/validators/post/post.schemas'
 
 export class PostService implements IPostService {
     constructor(private readonly postRepository: IPostRepository) {}
 
     create = async (data: CreatePostDTO) => {
-        const validatedData: CreatePostDTO = createPostSchema.parse(data) as CreatePostDTO
-        return await this.postRepository.create(validatedData)
+        const post = await this.postRepository.create(data)
+        return responsePostSchema.parse(post)
     }
 
     retrieve = async (id: string) => {
@@ -19,18 +19,23 @@ export class PostService implements IPostService {
             throw new NotFoundError()
         }
 
-        return post
+        return responsePostSchema.parse(post)
     }
 
     findAll = async (params?: any) => {
-        throw new Error('Method not implemented.')
+        const result = await this.postRepository.findAll(params)
+        return {
+            items: result.items.map((item) => responsePostSchema.parse(item)),
+            meta: result.meta,
+        }
     }
 
     update = async (id: string, data: any) => {
-        throw new Error('Method not implemented.')
+        const post = await this.postRepository.update(id, data)
+        return responsePostSchema.parse(post)
     }
 
     delete = async (id: string) => {
-        throw new Error('Method not implemented.')
+        return await this.postRepository.delete(id)
     }
 }

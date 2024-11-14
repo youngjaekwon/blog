@@ -1,7 +1,6 @@
-import { ZodValidationError } from '@/errors/common/zod.error'
 import { validateSchema } from '@/middleware/common/zod.middleware'
 import { Request, Response } from 'express'
-import { z } from 'zod'
+import { z, ZodError } from 'zod'
 
 const testCreateSchema = z.object({
     title: z.string().min(1).max(255),
@@ -38,18 +37,19 @@ describe('ValidationMiddleware', () => {
         expect(mockRequest.body).toEqual(validData)
     })
 
-    it('should throw ValidationError for invalid data', () => {
+    it('should call next with ZodError for invalid data', () => {
+        // Given
         const invalidData = {
-            title: '',
-            content: 'x'.repeat(1001),
+            title: 'Test Post',
+            content: '',
         }
         mockRequest.body = invalidData
 
+        // When
         const middleware = validateSchema(testCreateSchema)
+        middleware(mockRequest as Request, mockResponse as Response, nextFunction)
 
-        expect(() => middleware(mockRequest as Request, mockResponse as Response, nextFunction)).toThrow(
-            ZodValidationError
-        )
-        expect(nextFunction).not.toHaveBeenCalled()
+        // Then
+        expect(nextFunction).toHaveBeenCalledWith(expect.any(ZodError))
     })
 })

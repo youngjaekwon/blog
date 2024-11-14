@@ -2,6 +2,7 @@ import { DatabaseError } from '@/errors/common/database.error'
 import { errorMiddleware } from '@/middleware/error/error.middleware'
 import { Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
+import { ZodError } from 'zod'
 
 describe('ErrorMiddleware', () => {
     let mockRequest: Partial<Request>
@@ -38,6 +39,35 @@ describe('ErrorMiddleware', () => {
         expect(mockResponse.json).toHaveBeenCalledWith({
             success: false,
             error: expect.any(Object),
+        })
+    })
+
+    it('should handle ZodError', () => {
+        const zodError = new ZodError([
+            {
+                code: 'invalid_type',
+                expected: 'string',
+                received: 'number',
+                path: ['title'],
+                message: 'Expected string, received number',
+            },
+        ])
+
+        errorMiddleware(zodError, mockRequest as Request, mockResponse as Response, nextFunction)
+
+        expect(mockResponse.status).toHaveBeenCalledWith(StatusCodes.UNPROCESSABLE_ENTITY)
+        expect(mockResponse.json).toHaveBeenCalledWith({
+            success: false,
+            error: {
+                message: 'Validation failed',
+                errorCode: 'VALIDATION_ERROR',
+                errors: [
+                    {
+                        field: 'title',
+                        message: 'Expected string, received number',
+                    },
+                ],
+            },
         })
     })
 })

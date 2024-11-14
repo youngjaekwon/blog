@@ -1,17 +1,17 @@
 import { CreatePostDTO } from '@/dtos/post/post.create.dto'
+import { ResponsePostDTO } from '@/dtos/post/post.response.dto'
 import { UpdatePostDTO } from '@/dtos/post/post.update.dto'
-import { Post } from '@/models/post/post.model'
 import { PaginatedResponse } from '@/types/common/pagination.types'
 import { FindManyArgs } from '@/types/common/repository.types'
 
 export interface IPostService {
-    create(data: CreatePostDTO): Promise<Post>
+    create(data: CreatePostDTO): Promise<ResponsePostDTO>
 
-    retrieve(id: string): Promise<Post>
+    retrieve(id: string): Promise<ResponsePostDTO>
 
-    findAll(params?: FindManyArgs): Promise<PaginatedResponse<Post>>
+    findAll(params?: FindManyArgs): Promise<PaginatedResponse<ResponsePostDTO>>
 
-    update(id: string, data: UpdatePostDTO): Promise<Post>
+    update(id: string, data: UpdatePostDTO): Promise<ResponsePostDTO>
 
     delete(id: string): Promise<void>
 }

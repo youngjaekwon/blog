@@ -1,4 +1,4 @@
-import { DatabaseError, DuplicateError } from '@/errors/common/database.error'
+import { DatabaseError, DuplicateError, NotFoundError } from '@/errors/common/database.error'
 import { DEFAULT_PAGINATION, PaginatedResponse } from '@/types/common/pagination.types'
 import { FindManyArgs, RepositoryDelegate } from '@/types/common/repository.types'
 import { PrismaClientInitializationError, PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
@@ -15,6 +15,11 @@ export abstract class BaseDelegate {
                 // 유니크 제약조건 위반 (P2002)
                 if (error.code === 'P2002') {
                     throw new DuplicateError()
+                }
+
+                // Record not found (P2025)
+                if (error.code === 'P2025') {
+                    throw new NotFoundError()
                 }
             }
             throw error

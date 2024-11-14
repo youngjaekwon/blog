@@ -45,36 +45,6 @@ describe('PostService', () => {
             expect(post.tags).toEqual(postData.tags ? expect.arrayContaining(postData.tags) : [])
         })
 
-        it('should fail when title is empty', async () => {
-            const postData: CreatePostDTO = {
-                title: '',
-                content: 'Test Content',
-                tags: ['test'],
-            }
-
-            await expect(postService.create(postData)).rejects.toThrow()
-        })
-
-        it('should fail when content is empty', async () => {
-            const postData: CreatePostDTO = {
-                title: 'Test Title',
-                content: '',
-                tags: ['test'],
-            }
-
-            await expect(postService.create(postData)).rejects.toThrow()
-        })
-
-        it('should fail when title exceeds maximum length', async () => {
-            const postData: CreatePostDTO = {
-                title: 'a'.repeat(256),
-                content: 'Test Content',
-                tags: ['test'],
-            }
-
-            await expect(postService.create(postData)).rejects.toThrow()
-        })
-
         it('should create post without tags', async () => {
             const postData: CreatePostDTO = {
                 title: 'Test Post',
@@ -95,26 +65,6 @@ describe('PostService', () => {
 
             expect(post).toBeDefined()
             expect(post.tags).toHaveLength(0)
-        })
-
-        it('should fail when tags exceed maximum count', async () => {
-            const postData: CreatePostDTO = {
-                title: 'Test Post',
-                content: 'Test Content',
-                tags: Array(11).fill('tag'),
-            }
-
-            await expect(postService.create(postData)).rejects.toThrow()
-        })
-
-        it('should fail when tag length exceed maximum', async () => {
-            const postData: CreatePostDTO = {
-                title: 'Test Post',
-                content: 'Test Content',
-                tags: ['a'.repeat(51)],
-            }
-
-            await expect(postService.create(postData)).rejects.toThrow()
         })
     })
 
@@ -150,6 +100,147 @@ describe('PostService', () => {
             const postId = 'invalid-id'
 
             await expect(postService.retrieve(postId)).rejects.toThrow()
+        })
+    })
+
+    describe('findAll', () => {
+        it('should retrieve all posts', async () => {
+            const mockPosts: Post[] = [
+                {
+                    id: '1',
+                    title: 'Test Post 1',
+                    content: 'Test Content 1',
+                    tags: ['test'],
+                    views: 0,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+                {
+                    id: '2',
+                    title: 'Test Post 2',
+                    content: 'Test Content 2',
+                    tags: ['test'],
+                    views: 0,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+            ]
+
+            const expectedResponse = {
+                items: mockPosts,
+                meta: {
+                    total: mockPosts.length,
+                    page: 1,
+                    limit: 10,
+                    totalPages: 1,
+                    hasNext: false,
+                    hasPrev: false,
+                },
+            }
+
+            mockPostRepository.findAll.mockResolvedValue(expectedResponse)
+
+            const posts = await postService.findAll()
+
+            expect(posts).toEqual(expectedResponse)
+        })
+
+        it('should retrieve all posts with empty data', async () => {
+            const expectedResponse = {
+                items: [],
+                meta: {
+                    total: 0,
+                    page: 1,
+                    limit: 10,
+                    totalPages: 1,
+                    hasNext: false,
+                    hasPrev: false,
+                },
+            }
+            mockPostRepository.findAll.mockResolvedValue(expectedResponse)
+
+            const posts = await postService.findAll()
+
+            expect(posts).toEqual(expectedResponse)
+        })
+    })
+
+    describe('update', () => {
+        it('should update a post', async () => {
+            const postId = '1'
+            const postData: CreatePostDTO = {
+                title: 'Test Post',
+                content: 'Test Content',
+                tags: ['test'],
+            }
+            const updatedPost: Post = {
+                id: postId,
+                ...postData,
+                tags: ['test'],
+                views: 0,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            }
+
+            mockPostRepository.update.mockResolvedValue(updatedPost)
+
+            const post = await postService.update(postId, postData)
+
+            expect(post).toEqual(updatedPost)
+        })
+
+        it('should fail when post is not found', async () => {
+            const postId = '1'
+            const postData: CreatePostDTO = {
+                title: 'Test Post',
+                content: 'Test Content',
+                tags: ['test'],
+            }
+
+            mockPostRepository.update.mockRejectedValue(Error())
+
+            await expect(postService.update(postId, postData)).rejects.toThrow()
+        })
+
+        it('should fail when post id is invalid', async () => {
+            const postId = 'invalid-id'
+            const postData: CreatePostDTO = {
+                title: 'Test Post',
+                content: 'Test Content',
+                tags: ['test'],
+            }
+
+            mockPostRepository.update.mockRejectedValue(Error())
+
+            await expect(postService.update(postId, postData)).rejects.toThrow()
+        })
+    })
+
+    describe('delete', () => {
+        it('should delete a post', async () => {
+            const postId = '1'
+
+            mockPostRepository.delete.mockResolvedValue()
+
+            await postService.delete(postId)
+
+            expect(mockPostRepository.delete).toHaveBeenCalledWith(postId)
+        })
+
+        it('should fail when post is not found', async () => {
+            const postId = '1'
+
+            mockPostRepository.delete.mockRejectedValue(Error())
+
+            await expect(postService.delete(postId)).rejects.toThrow()
+        })
+
+        it('should fail when post id is invalid', async () => {
+            const postId = 'invalid-id'
+
+            mockPostRepository.delete.mockRejectedValue(Error())
+
+            await expect(postService.delete(postId)).rejects.toThrow()
         })
     })
 })

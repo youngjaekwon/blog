@@ -10,6 +10,7 @@ export const postRouter = Router()
 const postService = new PostService(postRepository)
 const postController = new PostController(postService)
 
+postRouter.get('/', postController.retrievePosts)
 postRouter.post('/', validateSchema(createPostSchema), postController.createPost)
 postRouter.get('/:id', postController.retrievePost)
 

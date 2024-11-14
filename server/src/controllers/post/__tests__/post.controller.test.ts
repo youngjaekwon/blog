@@ -91,4 +91,95 @@ describe('PostController', () => {
             })
         })
     })
+
+    describe('retrievePosts', () => {
+        it('should retrieve all posts successfully', async () => {
+            // Given
+            const mockPosts = {
+                items: [
+                    {
+                        id: '1',
+                        title: 'Test Post',
+                        content: 'Test Content',
+                        tags: [],
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                        views: 0,
+                    },
+                ],
+                meta: {
+                    total: 1,
+                    page: 1,
+                    limit: 10,
+                    totalPages: 1,
+                    hasNext: false,
+                    hasPrev: false,
+                },
+            }
+            ;(mockPostService.findAll as jest.Mock).mockResolvedValue(mockPosts)
+
+            // When
+            await postController.retrievePosts(mockRequest as Request, mockResponse as Response)
+
+            // Then
+            expect(mockPostService.findAll).toHaveBeenCalledWith()
+            expect(mockResponse.status).toHaveBeenCalledWith(StatusCodes.OK)
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: true,
+                data: mockPosts,
+            })
+        })
+    })
+
+    describe('updatePost', () => {
+        it('should update a post successfully', async () => {
+            // Given
+            const mockPostId = '1'
+            const mockPostData = {
+                title: 'Updated Post',
+                content: 'Updated Content',
+            }
+            const mockUpdatedPost = {
+                id: mockPostId,
+                ...mockPostData,
+                tags: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                views: 0,
+            }
+            mockRequest.params = { id: mockPostId }
+            mockRequest.body = mockPostData
+            ;(mockPostService.update as jest.Mock).mockResolvedValue(mockUpdatedPost)
+
+            // When
+            await postController.updatePost(mockRequest as Request, mockResponse as Response)
+
+            // Then
+            expect(mockPostService.update).toHaveBeenCalledWith(mockPostId, mockPostData)
+            expect(mockResponse.status).toHaveBeenCalledWith(StatusCodes.OK)
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: true,
+                data: mockUpdatedPost,
+            })
+        })
+    })
+
+    describe('deletePost', () => {
+        it('should delete a post successfully', async () => {
+            // Given
+            const mockPostId = '1'
+            mockRequest.params = { id: mockPostId }
+
+            // When
+            await postController.deletePost(mockRequest as Request, mockResponse as Response)
+
+            // Then
+            expect(mockPostService.delete).toHaveBeenCalledWith(mockPostId)
+            expect(mockResponse.status).toHaveBeenCalledWith(StatusCodes.NO_CONTENT)
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: true,
+                data: null,
+            })
+        })
+    })
 })
