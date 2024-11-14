@@ -1,3 +1,4 @@
+import { errorMiddleware } from '@/middleware/error/error.middleware'
 import apiRouter from '@/routes/app.routes'
 
 var express = require('express')
@@ -13,6 +14,10 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
+// middleware
+app.use(errorMiddleware)
+
+// routes
 app.use('/api', apiRouter)
 
 module.exports = app

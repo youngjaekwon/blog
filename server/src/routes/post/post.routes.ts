@@ -9,5 +9,6 @@ const postService = new PostService(postRepository)
 const postController = new PostController(postService)
 
 postRouter.post('/', postController.createPost)
+postRouter.get('/:id', postController.retrievePost)
 
 export default postRouter

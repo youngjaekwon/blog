@@ -1,14 +1,23 @@
 import { CreatePostDTO } from '@/dtos/post/post.create.dto'
-import { prisma } from '@/lib/prisma'
+import { PostNotFoundError } from '@/errors/post/post.error'
 import { IPostRepository } from '@/repositories/post/post.interface'
 import { createPostSchema } from '@/validators/post/post.schemas'
 
 export class PostService {
-    constructor(
-        private readonly postRepository: IPostRepository
-    ) {}
+    constructor(private readonly postRepository: IPostRepository) {}
+
     create = async (data: CreatePostDTO) => {
         const validatedData: CreatePostDTO = createPostSchema.parse(data) as CreatePostDTO
-        return this.postRepository.create(validatedData)
+        return await this.postRepository.create(validatedData)
+    }
+
+    retrieve = async (id: string) => {
+        const post = await this.postRepository.findById(id, { comments: true })
+
+        if (!post) {
+            throw new PostNotFoundError()
+        }
+
+        return post
     }
 }

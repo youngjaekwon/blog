@@ -1,7 +1,4 @@
-import { Request, Response } from 'express'
 import { CreatePostDTO } from '@/dtos/post/post.create.dto'
-import { PostService } from '@/services/post/post.service'
-import { StatusCodes } from 'http-status-codes'
 import {
     PostCreateError,
     PostDatabaseError,
@@ -9,10 +6,13 @@ import {
     PostError,
     PostValidationError,
 } from '@/errors/post/post.error'
-import { PrismaClientInitializationError, PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
-import { ZodError } from 'zod'
-import { ApiResponse } from '@/types/common/response.types'
 import { Post } from '@/models/post/post.model'
+import { PostService } from '@/services/post/post.service'
+import { ApiResponse } from '@/types/common/response.types'
+import { PrismaClientInitializationError, PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
+import { Request, Response } from 'express'
+import { StatusCodes } from 'http-status-codes'
+import { ZodError } from 'zod'
 
 export class PostController {
     constructor(private readonly postService: PostService) {}
@@ -71,5 +71,14 @@ export class PostController {
                 error: unknownError.toJSON(),
             })
         }
+    }
+
+    retrievePost = async (req: Request, res: Response<ApiResponse<Post>>) => {
+        const { id } = req.params
+        const post = await this.postService.retrieve(id)
+        res.status(StatusCodes.OK).json({
+            success: true,
+            data: post,
+        })
     }
 }

@@ -1,8 +1,7 @@
-import { PostService } from '@/services/post/post.service'
-import { prisma } from '@/lib/prisma'
 import { CreatePostDTO } from '@/dtos/post/post.create.dto'
-import { IPostRepository } from '@/repositories/post/post.interface'
 import { Post } from '@/models/post/post.model'
+import { IPostRepository } from '@/repositories/post/post.interface'
+import { PostService } from '@/services/post/post.service'
 
 describe('PostService', () => {
     let postService: PostService
@@ -14,7 +13,7 @@ describe('PostService', () => {
             create: jest.fn(),
             update: jest.fn(),
             delete: jest.fn(),
-            findAll: jest.fn()
+            findAll: jest.fn(),
         }
         postService = new PostService(mockPostRepository)
     })
@@ -32,7 +31,7 @@ describe('PostService', () => {
                 tags: ['test'],
                 views: 0,
                 createdAt: new Date(),
-                updatedAt: new Date()
+                updatedAt: new Date(),
             }
 
             mockPostRepository.create.mockResolvedValue(expectedPost)
@@ -86,7 +85,7 @@ describe('PostService', () => {
                 tags: [],
                 views: 0,
                 createdAt: new Date(),
-                updatedAt: new Date()
+                updatedAt: new Date(),
             }
 
             mockPostRepository.create.mockResolvedValue(expectedPost)
@@ -115,6 +114,41 @@ describe('PostService', () => {
             }
 
             await expect(postService.create(postData)).rejects.toThrow()
+        })
+    })
+
+    describe('retrieve', () => {
+        it('should retrieve a post', async () => {
+            const postId = '1'
+            const mockPost: Post = {
+                id: postId,
+                title: 'Test Post',
+                content: 'Test Content',
+                tags: ['test'],
+                views: 0,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            }
+
+            mockPostRepository.findById.mockResolvedValue(mockPost)
+
+            const post = await postService.retrieve(postId)
+
+            expect(post).toEqual(mockPost)
+        })
+
+        it('should fail when post is not found', async () => {
+            const postId = '1'
+
+            mockPostRepository.findById.mockResolvedValue(null)
+
+            await expect(postService.retrieve(postId)).rejects.toThrow()
+        })
+
+        it('should fail when post id is invalid', async () => {
+            const postId = 'invalid-id'
+
+            await expect(postService.retrieve(postId)).rejects.toThrow()
         })
     })
 })
