@@ -9,8 +9,8 @@ export class PostCreateError extends PostError {
     }
 }
 
-export class PostDatabaseError extends PostError {
-    constructor(message: string = 'Database operation failed') {
-        super(message, StatusCodes.SERVICE_UNAVAILABLE, 'DATABASE_ERROR')
+export class PostRetrieveError extends PostError {
+    constructor(message: string = 'Failed to retrieve Post') {
+        super(message, StatusCodes.BAD_REQUEST, 'POST_RETRIEVE_FAILED')
     }
 }

@@ -1,5 +1,5 @@
 import { CreatePostDTO } from '@/dtos/post/post.create.dto'
-import { PostCreateError } from '@/errors/post/post.error'
+import { PostCreateError, PostRetrieveError } from '@/errors/post/post.error'
 import { Post } from '@/models/post/post.model'
 import { IPostService } from '@/services/post/post.interface'
 import { ApiResponse } from '@/types/common/response.types'
@@ -18,20 +18,22 @@ export class PostController {
                 data: post,
             })
         } catch (error) {
-            const unknownError = new PostCreateError('An unexpected error occurred')
-            return res.status(unknownError.statusCode).json({
-                success: false,
-                error: unknownError.toJSON(),
-            })
+            const unknownError = new PostCreateError()
+            throw unknownError
         }
     }
 
     retrievePost = async (req: Request, res: Response<ApiResponse<Post>>) => {
-        const { id } = req.params
-        const post = await this.postService.retrieve(id)
-        res.status(StatusCodes.OK).json({
-            success: true,
-            data: post,
-        })
+        try {
+            const { id } = req.params
+            const post = await this.postService.retrieve(id)
+            res.status(StatusCodes.OK).json({
+                success: true,
+                data: post,
+            })
+        } catch (error) {
+            const unknownError = new PostRetrieveError()
+            throw unknownError
+        }
     }
 }
