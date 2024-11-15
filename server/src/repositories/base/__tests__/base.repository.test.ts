@@ -30,7 +30,9 @@ describe('BaseRepository', () => {
             update: jest.fn(),
             delete: jest.fn(),
             count: jest.fn(),
+            getSearchFields: jest.fn(),
         }
+        mockDelegate.getSearchFields.mockReturnValue(['name'])
 
         repository = new BaseRepository(mockDelegate)
     })
@@ -99,16 +101,21 @@ describe('BaseRepository', () => {
 
             // When
             const result = await repository.findAll({
-                skip: 20,
-                take: 10,
-                where: { name: 'Test' },
+                page: 3,
+                limit: 10,
+                search: 'Test',
+                sort: 'name',
+                order: 'asc',
             })
 
             // Then
             expect(mockDelegate.findMany).toHaveBeenCalledWith({
+                where: {
+                    OR: [{ name: { contains: 'Test' } }],
+                },
+                orderBy: { name: 'asc' },
                 skip: 20,
                 take: 10,
-                where: { name: 'Test' },
             })
             expect(result.meta).toEqual({
                 total: 21,

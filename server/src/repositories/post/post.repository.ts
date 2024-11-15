@@ -32,6 +32,10 @@ export class PrismaPostDelegate extends BaseDelegate implements RepositoryDelega
     async count(args: any) {
         return this.executeQuery(() => this.prismaDelegate.count(args))
     }
+
+    public getSearchFields(): string[] {
+        return ['title', 'content']
+    }
 }
 
 const prisma = new PrismaClient()

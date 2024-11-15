@@ -15,6 +15,7 @@ describe('PostRepository', () => {
     beforeEach(() => {
         prismaMock = mockDeep<PrismaClient>()
         delegateMock = mockDeep<PrismaPostDelegate>()
+        delegateMock.getSearchFields.mockReturnValue(['title', 'content'])
         postRepository = new BaseRepository<Post, CreatePostDTO, UpdatePostDTO>(delegateMock)
     })
 
@@ -107,21 +108,19 @@ describe('PostRepository', () => {
             delegateMock.findMany.mockResolvedValue(mockPosts)
             delegateMock.count.mockResolvedValue(1)
 
-            const params: FindManyArgs = {
+            const params = {
+                page: 1,
+                limit: 10,
+                search: 'Test',
+                sort: 'title',
+                order: 'asc',
+            }
+
+            const args = {
                 where: {
-                    title: {
-                        $regex: 'test',
-                    },
-                    views: {
-                        $gte: 5,
-                    },
+                    OR: [{ title: { contains: params.search } }, { content: { contains: params.search } }],
                 },
-                orderBy: {
-                    createdAt: 'desc',
-                },
-                include: {
-                    comments: true,
-                },
+                orderBy: { title: 'asc' },
                 skip: 0,
                 take: 10,
             }
@@ -140,9 +139,9 @@ describe('PostRepository', () => {
 
             const result = await postRepository.findAll(params)
 
-            expect(delegateMock.findMany).toHaveBeenCalledWith(params)
+            expect(delegateMock.findMany).toHaveBeenCalledWith(args)
             expect(delegateMock.count).toHaveBeenCalledWith({
-                where: params.where,
+                where: args.where,
             })
             expect(result).toEqual(expectedPagination)
         })

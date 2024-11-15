@@ -1,7 +1,9 @@
 import { DatabaseError, DuplicateError, NotFoundError } from '@/errors/common/database.error'
-import { DEFAULT_PAGINATION, PaginatedResponse } from '@/types/common/pagination.types'
+import { DEFAULT_PAGINATION, PaginatedResponse, PaginationParams } from '@/types/common/pagination.types'
 import { FindManyArgs, RepositoryDelegate } from '@/types/common/repository.types'
+import { paginationSchema } from '@/validators/common/pagination.schemas'
 import { PrismaClientInitializationError, PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
+import { z } from 'zod'
 
 export abstract class BaseDelegate {
     protected async executeQuery<T>(query: () => Promise<T>): Promise<T> {
@@ -25,6 +27,26 @@ export abstract class BaseDelegate {
             throw error
         }
     }
+
+    public getSearchFields(): string[] {
+        throw new Error('not Implemented')
+    }
+}
+
+const convertPaginationToFindManyArgs = (pagination: PaginationParams, searchFields: string[]): FindManyArgs => {
+    const searchConditions = pagination.search
+        ? {
+              OR: searchFields.map((field) => ({
+                  [field]: { contains: pagination.search },
+              })),
+          }
+        : undefined
+    return {
+        where: searchConditions,
+        orderBy: pagination.sort ? { [pagination.sort]: pagination.order } : undefined,
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+    }
 }
 
 export class BaseRepository<TModel, TCreateDTO, TUpdateDTO> {
@@ -37,8 +59,8 @@ export class BaseRepository<TModel, TCreateDTO, TUpdateDTO> {
         })
     }
 
-    async findAll(params?: FindManyArgs): Promise<PaginatedResponse<TModel>> {
-        const args = params ?? {}
+    async findAll(params?: any): Promise<PaginatedResponse<TModel>> {
+        const args = params ? convertPaginationToFindManyArgs(params, this.delegate.getSearchFields()) : {}
         const pagination = {
             page: args?.skip
                 ? Math.floor(args.skip / (args.take || DEFAULT_PAGINATION.limit)) + 1

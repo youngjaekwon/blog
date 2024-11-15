@@ -55,7 +55,6 @@ export interface WhereOperators {
 export interface FindManyArgs {
     where?: WhereOptions
     orderBy?: Record<string, SortOrder>
-    include?: Record<string, boolean>
     skip?: number
     take?: number
 }
@@ -71,4 +70,5 @@ export interface RepositoryDelegate<TModel, TCreateDTO, TUpdateDTO> {
     update: (args: UpdateArgs<TUpdateDTO>) => Promise<TModel>
     delete: (args: DeleteArgs) => Promise<TModel>
     count: (args: CountArgs) => Promise<number>
+    getSearchFields: () => string[]
 }

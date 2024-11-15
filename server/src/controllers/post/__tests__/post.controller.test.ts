@@ -117,12 +117,13 @@ describe('PostController', () => {
                 },
             }
             ;(mockPostService.findAll as jest.Mock).mockResolvedValue(mockPosts)
+            mockRequest.query = {}
 
             // When
             await postController.retrievePosts(mockRequest as Request, mockResponse as Response)
 
             // Then
-            expect(mockPostService.findAll).toHaveBeenCalledWith()
+            expect(mockPostService.findAll).toHaveBeenCalledWith({})
             expect(mockResponse.status).toHaveBeenCalledWith(StatusCodes.OK)
             expect(mockResponse.json).toHaveBeenCalledWith({
                 success: true,

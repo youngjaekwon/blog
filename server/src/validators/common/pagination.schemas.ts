@@ -1,3 +1,4 @@
+import { FindManyArgs } from '@/types/common/repository.types'
 import { z } from 'zod'
 
 export const paginationSchema = z.object({

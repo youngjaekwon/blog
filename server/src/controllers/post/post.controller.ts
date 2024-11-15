@@ -39,7 +39,7 @@ export class PostController {
 
     retrievePosts = async (req: Request, res: Response<ApiResponse<PaginatedResponse<ResponsePostDTO>>>) => {
         try {
-            const posts = await this.postService.findAll()
+            const posts = await this.postService.findAll(req.query)
             res.status(StatusCodes.OK).json({
                 success: true,
                 data: posts,
