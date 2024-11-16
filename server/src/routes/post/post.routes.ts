@@ -3,7 +3,7 @@ import { validateSchema } from '@/middleware/common/zod.middleware'
 import { postRepository } from '@/repositories/post/post.repository'
 import { PostService } from '@/services/post/post.service'
 import { paginationSchema } from '@/validators/common/pagination.schemas'
-import { createPostSchema } from '@/validators/post/post.schemas'
+import { createPostSchema, updatePostSchema } from '@/validators/post/post.schemas'
 import { Router } from 'express'
 
 export const postRouter = Router()
@@ -14,5 +14,7 @@ const postController = new PostController(postService)
 postRouter.get('/', validateSchema(paginationSchema, 'query'), postController.retrievePosts)
 postRouter.post('/', validateSchema(createPostSchema, 'body'), postController.createPost)
 postRouter.get('/:id', postController.retrievePost)
+postRouter.patch('/:id', validateSchema(updatePostSchema, 'body'), postController.updatePost)
+postRouter.delete('/:id', postController.deletePost)
 
 export default postRouter
