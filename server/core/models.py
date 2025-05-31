@@ -28,7 +28,9 @@ class SoftDeleteModel(models.Model):
             return
 
         for rel in self._meta.get_fields():
-            if (rel.one_to_many or rel.one_to_one or rel.many_to_many) and rel.auto_created:
+            if (
+                rel.one_to_many or rel.one_to_one or rel.many_to_many
+            ) and rel.auto_created:
                 accessor_name = rel.get_accessor_name()
                 related_objects = getattr(self, accessor_name, None)
 
@@ -37,11 +39,15 @@ class SoftDeleteModel(models.Model):
 
                 if rel.one_to_one:
                     related_object = related_objects
-                    if hasattr(related_object, "delete") and isinstance(related_object, SoftDeleteModel):
+                    if hasattr(related_object, "delete") and isinstance(
+                        related_object, SoftDeleteModel
+                    ):
                         related_object.delete()
                 else:
                     for related_object in related_objects.all():
-                        if hasattr(related_object, "delete") and isinstance(related_object, SoftDeleteModel):
+                        if hasattr(related_object, "delete") and isinstance(
+                            related_object, SoftDeleteModel
+                        ):
                             related_object.delete()
 
         self.is_active = False

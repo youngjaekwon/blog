@@ -4,37 +4,71 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='PostTag',
+            name="PostTag",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255, unique=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255, unique=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Post',
+            name="Post",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('is_active', models.BooleanField(default=True)),
-                ('deleted_at', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('title', models.CharField(max_length=255)),
-                ('slug', models.SlugField(blank=True, max_length=255)),
-                ('content', models.TextField()),
-                ('view_count', models.PositiveIntegerField(default=0)),
-                ('is_public', models.BooleanField(default=True)),
-                ('tags', models.ManyToManyField(related_name='posts', to='posts.posttag')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("deleted_at", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("title", models.CharField(max_length=255)),
+                ("slug", models.SlugField(blank=True, max_length=255)),
+                ("content", models.TextField()),
+                ("view_count", models.PositiveIntegerField(default=0)),
+                ("is_public", models.BooleanField(default=True)),
+                (
+                    "tags",
+                    models.ManyToManyField(related_name="posts", to="posts.posttag"),
+                ),
             ],
             options={
-                'indexes': [models.Index(fields=['is_active', 'title'], name='posts_post_is_acti_4e257a_idx'), models.Index(fields=['is_active', 'slug'], name='posts_post_is_acti_596a01_idx'), models.Index(fields=['is_active', 'is_public'], name='posts_post_is_acti_f3908e_idx'), models.Index(fields=['is_active', 'created_at'], name='posts_post_is_acti_b464be_idx')],
+                "indexes": [
+                    models.Index(
+                        fields=["is_active", "title"],
+                        name="posts_post_is_acti_4e257a_idx",
+                    ),
+                    models.Index(
+                        fields=["is_active", "slug"],
+                        name="posts_post_is_acti_596a01_idx",
+                    ),
+                    models.Index(
+                        fields=["is_active", "is_public"],
+                        name="posts_post_is_acti_f3908e_idx",
+                    ),
+                    models.Index(
+                        fields=["is_active", "created_at"],
+                        name="posts_post_is_acti_b464be_idx",
+                    ),
+                ],
             },
         ),
     ]
