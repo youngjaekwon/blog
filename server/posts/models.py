@@ -1,4 +1,4 @@
-from core.models import BaseModel
+from core.models import BaseModel, SoftDeleteManager
 from django.db import models
 from django.utils.text import slugify
 
@@ -10,9 +10,9 @@ class PostTag(models.Model):
         return self.name
 
 
-class PostManager(models.Manager):
+class PostManager(SoftDeleteManager):
     def public(self):
-        return super().get_queryset().filter(is_public=True, is_active=True)
+        return super().get_queryset().filter(is_public=True)
 
 
 class Post(BaseModel):

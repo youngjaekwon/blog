@@ -72,3 +72,26 @@ def test_post_filtering_by_tags(posts, post_tags):
     for post in filtered_posts:
         assert post.tags.filter(name=tag_name).exists()
 
+@pytest.mark.django_db
+def test_post_filtering_by_public(posts):
+    """Post 모델의 공개 여부 필터링 테스트"""
+    from posts.models import Post
+
+    # Given
+    posts[0].is_public = True
+    posts[0].save()
+    posts[1].is_public = False
+    posts[1].save()
+    posts[2].is_active = False
+    posts[2].save()
+
+    # When
+    all_posts = Post.objects.all()
+    public_posts = Post.objects.public()
+    public_count = public_posts.count()
+    private_count = all_posts.count() - public_count
+
+    # Then
+    assert public_count > 0
+    assert private_count == 1
+
