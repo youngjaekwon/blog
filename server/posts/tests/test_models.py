@@ -95,3 +95,15 @@ def test_post_filtering_by_public(posts):
     assert public_count > 0
     assert private_count == 1
 
+@pytest.mark.django_db
+def test_post_view_count_increment(post):
+    """Post 모델의 조회수 증가 테스트"""
+    # Given
+    initial_view_count = post.view_count
+
+    # When
+    post.increase_view_count()
+
+    # Then
+    assert post.view_count == initial_view_count + 1
+
