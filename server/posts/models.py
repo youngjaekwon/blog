@@ -47,3 +47,7 @@ class Post(BaseModel):
         if not self.slug:
             self.slug = self._generate_unique_slug()
         super().save(*args, **kwargs)
+
+    def increase_view_count(self):
+        Post.objects.filter(id=self.id).update(view_count=models.F("view_count") + 1)
+        self.refresh_from_db(fields=["view_count"])

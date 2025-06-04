@@ -1,8 +1,11 @@
+from core.utils.ip import get_user_ip
+from rest_framework.request import Request
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from posts.models import Post
 from posts.schemas import post_schema_view
 from posts.serializers import PostSerializer
+from posts.services import increase_view_count_with_cache
 
 
 @post_schema_view
@@ -13,3 +16,11 @@ class PostViewSet(ReadOnlyModelViewSet):
     filterset_fields = ["tags__name"]
     ordering_fields = ["created_at", "view_count"]
     search_fields = ["title", "content", "tags__name"]
+    ordering = ["-created_at"]
+
+    def retrieve(self, request: Request, *args, **kwargs):
+        response = super().retrieve(request, *args, **kwargs)
+        post = self.get_object()
+        hashed_ip = get_user_ip(request)
+        increase_view_count_with_cache(post, hashed_ip)
+        return response
