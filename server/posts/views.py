@@ -7,7 +7,7 @@ from posts.serializers import PostSerializer
 
 @post_schema_view
 class PostViewSet(ReadOnlyModelViewSet):
-    queryset = Post.objects.prefetch_related("tags").all()
+    queryset = Post.objects.public().prefetch_related("tags").all()
     serializer_class = PostSerializer
 
     filterset_fields = ["tags__name"]

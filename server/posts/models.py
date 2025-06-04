@@ -10,6 +10,11 @@ class PostTag(models.Model):
         return self.name
 
 
+class PostManager(models.Manager):
+    def public(self):
+        return super().get_queryset().filter(is_public=True, is_active=True)
+
+
 class Post(BaseModel):
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, blank=True)
@@ -18,6 +23,8 @@ class Post(BaseModel):
     is_public = models.BooleanField(default=True)
 
     tags = models.ManyToManyField(PostTag, related_name="posts")
+
+    objects = PostManager()
 
     class Meta:
         indexes = [
