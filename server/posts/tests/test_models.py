@@ -56,6 +56,7 @@ def test_post_with_tags(post):
     assert post.tags.count() == post_tag_count_before + 1
     assert post.tags.filter(name=post_tag.name).exists()
 
+
 @pytest.mark.django_db
 def test_post_filtering_by_tags(posts, post_tags):
     """Post 모델의 태그를 기준으로 필터링 테스트"""
@@ -71,6 +72,7 @@ def test_post_filtering_by_tags(posts, post_tags):
     assert filtered_posts.count() > 0
     for post in filtered_posts:
         assert post.tags.filter(name=tag_name).exists()
+
 
 @pytest.mark.django_db
 def test_post_filtering_by_public(posts):
@@ -95,6 +97,7 @@ def test_post_filtering_by_public(posts):
     assert public_count > 0
     assert private_count == 1
 
+
 @pytest.mark.django_db
 def test_post_view_count_increment(post):
     """Post 모델의 조회수 증가 테스트"""
@@ -107,3 +110,63 @@ def test_post_view_count_increment(post):
     # Then
     assert post.view_count == initial_view_count + 1
 
+
+@pytest.mark.django_db
+def test_post_view_count_with_cache(post, mocker):
+    """Post 모델의 조회수 증가 캐시 테스트"""
+
+    # Given
+    initial_view_count = post.view_count
+    hashed_ip = "test_hashed_ip"
+
+    # Mock the cache set method
+    mock_cache_get = mocker.patch("posts.models.cache.get", return_value=None)
+    mock_cache_set = mocker.patch("posts.models.cache.set")
+
+    # When
+    post.increase_view_count_with_cache(hashed_ip=hashed_ip)
+
+    # Then
+    assert post.view_count == initial_view_count + 1
+    mock_cache_get.assert_called_once_with(f"post:{post.id}:view_count:{hashed_ip}")
+    mock_cache_set.assert_called_once_with(
+        f"post:{post.id}:view_count:{hashed_ip}", True, timeout=60 * 60 * 24
+    )
+
+
+@pytest.mark.django_db
+def test_post_view_count_with_cache_no_ip(post, mocker):
+    """Post 모델의 조회수 증가 캐시 테스트 (IP 없음)"""
+
+    # Given
+    initial_view_count = post.view_count
+
+    # Mock the cache set method
+    mock_cache_set = mocker.patch("posts.models.cache.set")
+
+    # When
+    post.increase_view_count_with_cache(hashed_ip=None)
+
+    # Then
+    assert post.view_count == initial_view_count
+    mock_cache_set.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_post_view_count_with_cache_existing_cache(post, mocker):
+    """Post 모델의 조회수 증가 캐시 테스트 (캐시가 이미 존재하는 경우)"""
+
+    # Given
+    initial_view_count = post.view_count
+    hashed_ip = "test_hashed_ip"
+
+    # Mock the cache get method to return a value
+    mock_cache_get = mocker.patch("posts.models.cache.get", return_value=True)
+
+    # When
+    post.increase_view_count_with_cache(hashed_ip=hashed_ip)
+    post.refresh_from_db(fields=["view_count"])
+
+    # Then
+    assert post.view_count == initial_view_count
+    mock_cache_get.assert_called_once_with(f"post:{post.id}:view_count:{hashed_ip}")

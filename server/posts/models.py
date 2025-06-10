@@ -1,4 +1,5 @@
 from core.models import BaseModel, SoftDeleteManager
+from django.core.cache import cache
 from django.db import models
 from django.utils.text import slugify
 
@@ -51,3 +52,14 @@ class Post(BaseModel):
     def increase_view_count(self):
         Post.objects.filter(id=self.id).update(view_count=models.F("view_count") + 1)
         self.refresh_from_db(fields=["view_count"])
+
+    def increase_view_count_with_cache(
+        self, hashed_ip: str | None = None, expire: int = 60 * 60 * 24
+    ) -> None:
+        if hashed_ip is None:
+            return
+
+        cache_key = f"post:{self.id}:view_count:{hashed_ip}"
+        if not cache.get(cache_key):
+            self.increase_view_count()
+            cache.set(cache_key, True, timeout=expire)

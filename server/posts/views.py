@@ -5,7 +5,6 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from posts.models import Post
 from posts.schemas import post_schema_view
 from posts.serializers import PostSerializer
-from posts.services import increase_view_count_with_cache
 
 
 @post_schema_view
@@ -22,5 +21,5 @@ class PostViewSet(ReadOnlyModelViewSet):
         response = super().retrieve(request, *args, **kwargs)
         post = self.get_object()
         hashed_ip = get_user_ip(request)
-        increase_view_count_with_cache(post, hashed_ip)
+        post.increase_view_count_with_cache(hashed_ip=hashed_ip)
         return response
