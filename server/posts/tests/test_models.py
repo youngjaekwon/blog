@@ -1,4 +1,5 @@
 import pytest
+from django.contrib.auth.hashers import check_password
 
 
 @pytest.mark.django_db
@@ -170,3 +171,53 @@ def test_post_view_count_with_cache_existing_cache(post, mocker):
     # Then
     assert post.view_count == initial_view_count
     mock_cache_get.assert_called_once_with(f"post:{post.id}:view_count:{hashed_ip}")
+
+
+@pytest.mark.django_db
+def test_comment_creation_via_manager(post):
+    """CommentManager를 통한 댓글 생성 테스트"""
+    from posts.models import Comment
+
+    # Given
+    author = "Test Author"
+    content = "This is a comment."
+    password = "test1234"
+
+    # When
+    comment = Comment.objects.create_comment(
+        post=post,
+        author=author,
+        content=content,
+        pw=password,
+    )
+
+    # Then
+    assert comment.author == author
+    assert comment.content == content
+    assert check_password(password, comment.hashed_pw)
+    assert comment.post == post
+
+
+@pytest.mark.django_db
+def test_comment_factory_default(comment):
+    """CommentFactory를 통한 기본 댓글 생성 테스트"""
+
+    # When
+
+    # Then
+    assert comment.post is not None
+    assert comment.author is not None
+    assert comment.content
+    assert comment.hashed_pw.startswith("pbkdf2_")  # Django 기본 해시 방식
+
+
+@pytest.mark.django_db
+def test_comment_check_password_success(comment):
+    """Comment 모델의 비밀번호 확인 테스트 - 일치하는 경우"""
+    assert comment.check_password("test1234") is True
+
+
+@pytest.mark.django_db
+def test_comment_check_password_failure(comment):
+    """Comment 모델의 비밀번호 확인 테스트 - 불일치하는 경우"""
+    assert comment.check_password("wrongpw") is False

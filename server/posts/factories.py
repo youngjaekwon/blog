@@ -1,7 +1,8 @@
 import factory
+from django.contrib.auth.hashers import make_password
 from factory.django import DjangoModelFactory
 
-from posts.models import Post, PostTag
+from posts.models import Comment, Post, PostTag
 
 
 class PostTagFactory(DjangoModelFactory):
@@ -31,3 +32,13 @@ class PostFactory(DjangoModelFactory):
             for _ in range(3):
                 tag = PostTagFactory()
                 self.tags.add(tag)
+
+
+class CommentFactory(DjangoModelFactory):
+    class Meta:
+        model = Comment
+
+    post = factory.SubFactory(PostFactory)
+    author = factory.Faker("name")
+    content = factory.Faker("sentence")
+    hashed_pw = factory.LazyFunction(lambda: make_password("test1234"))

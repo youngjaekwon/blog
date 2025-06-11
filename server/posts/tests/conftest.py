@@ -38,3 +38,12 @@ def posts(post_tags):
         posts.append(post)
 
     return posts
+
+
+@pytest.fixture
+def comment(post):
+    from posts.factories import CommentFactory
+
+    comment = CommentFactory(post=post)
+
+    return comment
