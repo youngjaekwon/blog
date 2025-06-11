@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from core.models import BaseModel, SoftDeleteManager
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.cache import cache
 from django.db import models
 from django.utils.text import slugify
@@ -63,3 +66,29 @@ class Post(BaseModel):
         if not cache.get(cache_key):
             self.increase_view_count()
             cache.set(cache_key, True, timeout=expire)
+
+
+class CommentManager(SoftDeleteManager):
+    def create_comment(
+        self, post: Post, author: str | None, content: str, pw: str
+    ) -> Comment:
+        return self.create(
+            post=post, author=author, content=content, hashed_pw=make_password(pw)
+        )
+
+
+class Comment(BaseModel):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
+    author = models.CharField(max_length=255, blank=True, null=True)
+    content = models.CharField(max_length=2047)
+    hashed_pw = models.CharField(max_length=255)
+
+    objects = CommentManager()
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["is_active", "post", "created_at"]),
+        ]
+
+    def check_password(self, pw: str) -> bool:
+        return check_password(pw, self.hashed_pw)
