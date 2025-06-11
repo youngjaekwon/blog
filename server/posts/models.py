@@ -79,7 +79,7 @@ class CommentManager(SoftDeleteManager):
 
 class Comment(BaseModel):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
-    author = models.CharField(max_length=255, blank=True, null=True)
+    author = models.CharField(max_length=255, null=True)
     content = models.CharField(max_length=2047)
     hashed_pw = models.CharField(max_length=255)
 
