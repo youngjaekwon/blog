@@ -1,10 +1,16 @@
-from core.utils.ip import get_user_ip
-from rest_framework.request import Request
-from rest_framework.viewsets import ReadOnlyModelViewSet
+from functools import cached_property
 
-from posts.models import Post
-from posts.schemas import post_schema_view
-from posts.serializers import PostSerializer
+from core.utils.ip import get_user_ip
+from django.shortcuts import get_object_or_404
+from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+
+from posts.models import Comment, Post
+from posts.schemas import comment_schema_view, post_schema_view
+from posts.serializers import CommentSerializer, PostSerializer
 
 
 @post_schema_view
@@ -23,3 +29,35 @@ class PostViewSet(ReadOnlyModelViewSet):
         hashed_ip = get_user_ip(request)
         post.increase_view_count_with_cache(hashed_ip=hashed_ip)
         return response
+
+
+@comment_schema_view
+class CommentViewSet(ModelViewSet):
+    serializer_class = CommentSerializer
+
+    ordering = ["-created_at"]
+
+    @cached_property
+    def post(self):
+        post_id = self.kwargs.get("post_pk")
+        return get_object_or_404(Post, id=post_id)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_serializer_context()
+        context["post"] = self.post
+        return context
+
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Comment.objects.none()
+        return self.post.comments.all()
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        password = request.data.get("password")
+        if not instance.check_password(password):
+            return PermissionDenied("Incorrect password")
+
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)

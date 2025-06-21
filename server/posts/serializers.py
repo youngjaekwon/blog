@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
 from .models import Comment, PostTag
 
@@ -31,7 +32,7 @@ class CommentSerializer(serializers.ModelSerializer):
     def create(self, validated_data: dict[str, str]) -> Comment:
         post = self.context.get("post")
         if not post:
-            raise serializers.ValidationError("Post not found in context")
+            raise AssertionError("Post must be provided via serializer context.")
         author = validated_data.get("author")
         content = validated_data.pop("content")
         password = validated_data.pop("password")
@@ -39,3 +40,13 @@ class CommentSerializer(serializers.ModelSerializer):
         return Comment.objects.create_comment(
             post=post, author=author, content=content, pw=password
         )
+
+    def update(self, instance: Comment, validated_data: dict[str, str]) -> Comment:
+        password = validated_data.pop("password", None)
+        if password and not instance.check_password(password):
+            raise PermissionDenied("Incorrect password")
+
+        instance.author = validated_data.get("author", instance.author)
+        instance.content = validated_data.get("content", instance.content)
+        instance.save()
+        return instance
