@@ -3,6 +3,7 @@ from functools import cached_property
 from core.utils.ip import get_user_ip
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -23,12 +24,16 @@ class PostViewSet(ReadOnlyModelViewSet):
     search_fields = ["title", "content", "tags__name"]
     ordering = ["-created_at"]
 
-    def retrieve(self, request: Request, *args, **kwargs):
-        response = super().retrieve(request, *args, **kwargs)
-        post = self.get_object()
+    @action(detail=False, methods=["get"], url_path=r"slug/<str:slug>")
+    def get_by_slug(self, request: Request, slug: str):
+        post = get_object_or_404(
+            Post.objects.public().prefetch_related("tags"), slug=slug
+        )
         hashed_ip = get_user_ip(request)
         post.increase_view_count_with_cache(hashed_ip=hashed_ip)
-        return response
+
+        serializer = self.get_serializer(post)
+        return Response(serializer.data)
 
 
 @comment_schema_view
