@@ -1,0 +1,80 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor AI Rules for Python Development
+
+## Python 프로젝트 실행 규칙
+
+### 1. UV 사용 의무
+
+- 모든 Python 관련 실행은 반드시 `uv`를 사용하여 가상 환경을 자동으로 관리
+- 최신 Python 문법 적용 필수
+- 별도의 가상 환경 활성화나 패키지 설치 없이 실행 가능하도록 구성
+
+### 2. UV 실행 명령어 패턴
+
+#### 기본 패턴
+
+```bash
+uv run <command>
+```
+
+#### Django 개발 서버 실행
+
+```bash
+uv run python manage.py runserver
+```
+
+#### 테스트 실행
+
+```bash
+uv run pytest
+```
+
+#### 기타 Python 스크립트 실행
+
+```bash
+uv run python <script_name>.py
+```
+
+### 3. UV의 장점 활용
+
+- `.venv` 가상 환경을 자동으로 생성
+- `pyproject.toml`에 명시된 의존성을 자동으로 설치
+- 프로젝트 실행 환경을 효율적으로 관리
+- 코드를 빠르게 실행 가능
+
+### 4. 개발 워크플로우
+
+1. 프로젝트 설정 시 `pyproject.toml`에 의존성 명시
+2. 모든 Python 실행은 `uv run` 명령어 사용
+3. 테스트 환경 자동 구성 및 실행
+4. 개발 서버 실행 시 자동 환경 설정
+
+### 5. 예시 명령어들
+
+```bash
+# Django 관리 명령어
+uv run python manage.py migrate
+uv run python manage.py createsuperuser
+uv run python manage.py collectstatic
+
+# 테스트 및 코드 품질
+uv run pytest
+uv run pytest -v
+uv run pytest --cov=.
+uv run ruff check
+uv run ruff format
+
+# 개발 도구
+uv run python -m ipython
+uv run python manage.py shell
+```
+
+### 6. 주의사항
+
+- `uv` 명령어 사용 시 가상 환경을 수동으로 활성화할 필요 없음
+- 프로젝트 루트 디렉토리에서 실행
+- `pyproject.toml` 파일이 올바르게 구성되어 있는지 확인

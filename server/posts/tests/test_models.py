@@ -221,3 +221,65 @@ def test_comment_check_password_success(comment):
 def test_comment_check_password_failure(comment):
     """Comment 모델의 비밀번호 확인 테스트 - 불일치하는 경우"""
     assert comment.check_password("wrongpw") is False
+
+
+@pytest.mark.django_db
+def test_posttag_creation():
+    """PostTag 모델의 생성 테스트"""
+    from posts.models import PostTag
+
+    # Given
+    tag_name = "Test Tag"
+
+    # When
+    post_tag = PostTag.objects.create(name=tag_name)
+
+    # Then
+    assert post_tag.name == tag_name
+    assert post_tag.id is not None
+
+
+@pytest.mark.django_db
+def test_posttag_str_method():
+    """PostTag 모델의 __str__ 메서드 테스트"""
+    from posts.models import PostTag
+
+    # Given
+    tag_name = "Test Tag"
+    post_tag = PostTag.objects.create(name=tag_name)
+
+    # When
+    str_representation = str(post_tag)
+
+    # Then
+    assert str_representation == tag_name
+
+
+@pytest.mark.django_db
+def test_posttag_unique_constraint():
+    """PostTag 모델의 unique constraint 테스트"""
+    from django.db import IntegrityError
+
+    from posts.models import PostTag
+
+    # Given
+    tag_name = "Unique Tag"
+    PostTag.objects.create(name=tag_name)
+
+    # When & Then
+    with pytest.raises(IntegrityError):
+        PostTag.objects.create(name=tag_name)
+
+
+@pytest.mark.django_db
+def test_posttag_factory():
+    """PostTagFactory를 통한 PostTag 생성 테스트"""
+    from posts.factories import PostTagFactory
+
+    # Given & When
+    post_tag = PostTagFactory()
+
+    # Then
+    assert post_tag.name is not None
+    assert "Tag" in post_tag.name
+    assert post_tag.id is not None
