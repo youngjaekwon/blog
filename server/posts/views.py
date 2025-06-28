@@ -1,5 +1,3 @@
-from functools import cached_property
-
 from core.utils.ip import get_user_ip
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -24,7 +22,7 @@ class PostViewSet(ReadOnlyModelViewSet):
     search_fields = ["title", "content", "tags__name"]
     ordering = ["-created_at"]
 
-    @action(detail=False, methods=["get"], url_path=r"slug/<str:slug>")
+    @action(detail=False, methods=["get"], url_path=r"slug/(?P<slug>[^/.]+)", url_name="get-by-slug")
     def get_by_slug(self, request: Request, slug: str):
         post = get_object_or_404(
             Post.objects.public().prefetch_related("tags"), slug=slug
@@ -42,27 +40,26 @@ class CommentViewSet(ModelViewSet):
 
     ordering = ["-created_at"]
 
-    @cached_property
-    def post(self):
+    def get_post(self):
         post_id = self.kwargs.get("post_pk")
         return get_object_or_404(Post, id=post_id)
 
-    def get_context_data(self, **kwargs):
+    def get_serializer_context(self):
         context = super().get_serializer_context()
-        context["post"] = self.post
+        context["post"] = self.get_post()
         return context
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Comment.objects.none()
-        return self.post.comments.all()
+        return self.get_post().comments.all()
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
 
         password = request.data.get("password")
         if not instance.check_password(password):
-            return PermissionDenied("Incorrect password")
+            raise PermissionDenied("Incorrect password")
 
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)

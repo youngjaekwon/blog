@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     "drf_spectacular",
     # jwt
     "rest_framework_simplejwt",
+    # django extentions
+    "django_extensions",
     # my apps
     "core",
     "posts",

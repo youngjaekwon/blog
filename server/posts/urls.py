@@ -1,14 +1,18 @@
 from rest_framework.routers import DefaultRouter
+from rest_framework_nested.routers import NestedDefaultRouter
 
 from posts.views import CommentViewSet, PostViewSet
 
 app_name = "posts"
 
 router = DefaultRouter()
-router.register(r"", PostViewSet, basename="post")
-router.register(
-    r"<int:post_pk>/comments",
+router.register(r"posts", PostViewSet, basename="posts")
+
+posts_router = NestedDefaultRouter(router, r"posts", lookup="post")
+posts_router.register(
+    r"comments",
     CommentViewSet,
-    basename="comment",
+    basename="post-comments",
 )
 urlpatterns = router.urls
+urlpatterns += posts_router.urls
