@@ -1,9 +1,11 @@
-My Personal Blog - DRF + Next.js
-================================
+My Personal Blog - DRF + React Router
+=====================================
 
 나만의 개인 블로그 프로젝트입니다.
-백엔드는 Django REST Framework(DRF), 프론트엔드는 Next.js를 사용합니다.
+백엔드는 Django REST Framework(DRF), 프론트엔드는 React Router v7을 사용합니다.
 마크다운 기반의 게시글, 익명 댓글 시스템, 보안 기능을 포함한 미니 CMS 형태의 블로그입니다.
+
+이 프로젝트는 `client/`(React Router v7)와 `server/`(Django DRF)로 구분된 풀스택 애플리케이션입니다.
 
 ----------------------------
 
@@ -12,15 +14,18 @@ My Personal Blog - DRF + Next.js
 
 Backend
 - Python 3.12+
-- Django 5.1.7
+- Django
 - Django REST Framework
-- PostgreSQL (예정)
+- SQLite (개발용)
 - drf-spectacular (API 문서화)
+- UV (패키지 관리)
 
 Frontend
-- Next.js 14+
-- React
-- TailwindCSS
+- React Router v7 (with SSR)
+- React 19
+- TailwindCSS v4
+- TypeScript
+- PNPM
 - Axios
 
 ----------------------------
@@ -28,34 +33,20 @@ Frontend
 ✨ 주요 기능
 ------------
 
-📌 게시글
+**게시글 관리**
+- 공개/비공개 게시글
+- 슬러그 기반 URL
+- 태그 시스템
+- 조회수 추적 (익명 IP 해싱)
 
-- ✅ 공개/비공개 게시글 관리
-- ✅ 슬러그 기반 URL 조회
-- ✅ 익명 조회수 추적 (IP 해싱으로 개인정보 보호)
-- ✅ 태그 시스템 (게시글 분류 및 필터링)
-- ✅ 소프트 삭제 (데이터 보존을 위한 논리적 삭제)
-- ✅ 자동 슬러그 생성 (게시글 제목 기반 고유 슬러그)
-- ✅ 작성일/수정일 자동 기록
+**댓글 시스템**
+- 익명 댓글 작성
+- 비밀번호 보호 댓글 수정/삭제
 
-💬 댓글
-
-- ✅ 익명 댓글 작성 (닉네임 선택 사항)
-- ✅ 비밀번호 보호 댓글 CRUD
-- ✅ 댓글 수정/삭제 시 비밀번호 인증
-- ✅ 소프트 삭제로 댓글 데이터 보존
-
-🔐 보안 및 관리 기능
-
-- ✅ 비밀번호 해시 처리 (댓글 비밀번호 안전 저장)
-- ✅ 익명 IP 해싱 (조회수 추적 시 개인정보 보호)
-- ✅ 다중 환경 지원 (dev/test/prod 분리)
-
-🧪 개발 편의 기능
-
-- ✅ API 문서화 (Swagger UI, ReDoc 자동 생성)
-- ✅ 테스트 코드 (pytest + factory-boy)
-- ✅ 코드 품질 도구 (ruff)
+**보안 및 개발**
+- 비밀번호 해시 처리
+- API 문서화 (Swagger UI)
+- 테스트 코드 포함
 
 ----------------------------
 
