@@ -283,3 +283,74 @@ def test_posttag_factory():
     assert post_tag.name is not None
     assert "Tag" in post_tag.name
     assert post_tag.id is not None
+
+
+@pytest.mark.django_db
+def test_posttag_slug_auto_generation_without_providing_slug():
+    """PostTag 생성 시 슬러그를 전달하지 않아도 정상적으로 생성되는지 테스트"""
+    from posts.models import PostTag
+
+    # Given
+    tag_name = "Python Programming"
+
+    # When
+    post_tag = PostTag.objects.create(name=tag_name)
+
+    # Then
+    assert post_tag.name == tag_name
+    assert post_tag.slug == "python-programming"
+    assert post_tag.slug is not None
+    assert len(post_tag.slug) > 0
+
+
+@pytest.mark.django_db
+def test_posttag_slug_generation_with_utf8_characters():
+    """PostTag의 이름을 utf-8 문자로 생성 시 슬러그가 정상적으로 생성되는지 테스트"""
+    from posts.models import PostTag
+
+    # Given
+    korean_tag_name = "파이썬 프로그래밍"
+    japanese_tag_name = "プログラミング"
+    emoji_tag_name = "🐍 Python"
+
+    # When
+    korean_tag = PostTag.objects.create(name=korean_tag_name)
+    japanese_tag = PostTag.objects.create(name=japanese_tag_name)
+    emoji_tag = PostTag.objects.create(name=emoji_tag_name)
+
+    # Then
+    assert korean_tag.name == korean_tag_name
+    assert korean_tag.slug == "파이썬-프로그래밍"
+    assert korean_tag.slug is not None
+
+    assert japanese_tag.name == japanese_tag_name
+    assert japanese_tag.slug == "プログラミング"
+    assert japanese_tag.slug is not None
+
+    assert emoji_tag.name == emoji_tag_name
+    assert emoji_tag.slug == "python"  # 이모지는 slugify에서 제거됨
+    assert emoji_tag.slug is not None
+
+
+@pytest.mark.django_db
+def test_posttag_slug_no_duplicate_error_with_emoji_removal():
+    """포스트 태그의 이름을 이모지를 포함하여 생성 시 슬러그 함수가 이모지를 삭제해도 슬러그가 중복으로 인해 에러가 발생하지 않는지 테스트"""
+    from posts.models import PostTag
+
+    # Given
+    tag_name1 = "🐍 Python"
+    tag_name2 = "Python"  # 이모지가 제거되면 같은 슬러그가 될 수 있음
+
+    # When - 순서대로 생성
+    tag1 = PostTag.objects.create(name=tag_name1)
+    tag2 = PostTag.objects.create(name=tag_name2)
+
+    # Then - 두 태그 모두 성공적으로 생성되어야 함
+    assert tag1.name == tag_name1
+    assert tag1.slug == "python"
+
+    assert tag2.name == tag_name2
+    assert tag2.slug == "python-1"  # 중복 방지를 위해 숫자가 추가됨
+
+    # 두 태그의 slug가 달라야 함
+    assert tag1.slug != tag2.slug

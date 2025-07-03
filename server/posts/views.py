@@ -7,9 +7,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from posts.models import Comment, Post
+from posts.models import Comment, Post, PostTag
 from posts.schemas import comment_schema_view, post_schema_view
-from posts.serializers import CommentSerializer, PostSerializer
+from posts.serializers import CommentSerializer, PostSerializer, PostTagSerializer
 
 
 @post_schema_view
@@ -17,7 +17,7 @@ class PostViewSet(ReadOnlyModelViewSet):
     queryset = Post.objects.public().prefetch_related("tags").all()
     serializer_class = PostSerializer
 
-    filterset_fields = ["tags__name"]
+    filterset_fields = ["tags__name", "tags__slug"]
     ordering_fields = ["created_at", "view_count"]
     search_fields = ["title", "content", "tags__name"]
     ordering = ["-created_at"]
@@ -63,3 +63,8 @@ class CommentViewSet(ModelViewSet):
 
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PostTagViewSet(ReadOnlyModelViewSet):
+    queryset = PostTag.objects.all().order_by("name")
+    serializer_class = PostTagSerializer

@@ -5,9 +5,14 @@ from .models import Comment, Post, PostTag
 
 
 class PostTagSerializer(serializers.ModelSerializer):
+    post_count = serializers.SerializerMethodField()
+
     class Meta:
         model = PostTag
-        fields = ["id", "name"]
+        fields = ["id", "name", "slug", "post_count"]
+
+    def get_post_count(self, obj):
+        return obj.posts.filter(is_public=True, is_active=True).count()
 
 
 class PostSerializer(serializers.ModelSerializer):

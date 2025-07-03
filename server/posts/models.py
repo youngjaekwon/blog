@@ -9,9 +9,24 @@ from django.utils.text import slugify
 
 class PostTag(models.Model):
     name = models.CharField(max_length=255, unique=True, db_index=True)
+    slug = models.SlugField(max_length=255, unique=True, null=True)
 
     def __str__(self):
         return self.name
+
+    def _generate_unique_slug(self) -> str:
+        base_slug = slugify(self.name, allow_unicode=True)
+        slug = base_slug
+        counter = 1
+        while PostTag.objects.filter(slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        return slug
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self._generate_unique_slug()
+        super().save(*args, **kwargs)
 
 
 class PostManager(SoftDeleteManager):
